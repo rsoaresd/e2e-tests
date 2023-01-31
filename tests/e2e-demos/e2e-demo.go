@@ -180,7 +180,8 @@ var _ = framework.E2ESuiteDescribe(Label("e2e-demo"), func() {
 					if componentTest.ContainerSource != "" {
 						Skip(fmt.Sprintf("component %s was imported from quay.io/docker.io source. Skipping pipelinerun check.", componentTest.Name))
 					}
-					Expect(fw.HasController.WaitForComponentPipelineToBeFinished(component.Name, application.Name, namespace)).To(Succeed(), "Failed component pipeline %v", err)
+
+					Expect(fw.HasController.WaitForComponentPipelineToBeFinished(fw.TektonController, component.Name, application.Name, namespace)).To(Succeed(), "Failed component pipeline %v", err)
 				})
 
 				It("finds the snapshot and checks if it is marked as successful", func() {

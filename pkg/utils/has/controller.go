@@ -10,6 +10,7 @@ import (
 
 	"github.com/redhat-appstudio/e2e-tests/pkg/constants"
 	"github.com/redhat-appstudio/e2e-tests/pkg/utils"
+	"github.com/redhat-appstudio/e2e-tests/pkg/utils/tekton"
 
 	. "github.com/onsi/ginkgo/v2"
 	routev1 "github.com/openshift/api/route/v1"
@@ -396,7 +397,7 @@ func (h *SuiteController) GetComponentService(componentName string, componentNam
 	return service, nil
 }
 
-func (h *SuiteController) WaitForComponentPipelineToBeFinished(componentName string, applicationName string, componentNamespace string) error {
+func (h *SuiteController) WaitForComponentPipelineToBeFinished(tk *tekton.SuiteController, componentName string, applicationName string, componentNamespace string) error {
 	return wait.PollImmediate(20*time.Second, 25*time.Minute, func() (done bool, err error) {
 		pipelineRun, err := h.GetComponentPipelineRun(componentName, applicationName, componentNamespace, false, "")
 
@@ -408,11 +409,17 @@ func (h *SuiteController) WaitForComponentPipelineToBeFinished(componentName str
 		for _, condition := range pipelineRun.Status.Conditions {
 			GinkgoWriter.Printf("PipelineRun %s reason: %s\n", pipelineRun.Name, condition.Reason)
 
-			if condition.Reason == "Failed" {
-				return false, fmt.Errorf("component %s pipeline failed", pipelineRun.Name)
-			}
+			if condition.Reason == "Failed" || condition.Status == corev1.ConditionTrue {
+				pipelineRunLogs, err := tk.GetPipelineRunLogs(pipelineRun.Name, pipelineRun.Namespace)
+				if err != nil {
+					return false, fmt.Errorf("GetPipelineRunLogs for %s failed: %s", pipelineRun.Name, err)
+				}
+				utils.WritePipelineRunLogs(pipelineRun.Name, pipelineRun.Namespace, pipelineRunLogs)
 
-			if condition.Status == corev1.ConditionTrue {
+				if condition.Reason == "Failed" {
+					return false, fmt.Errorf("component %s pipeline failed", pipelineRun.Name)
+				}
+
 				return true, nil
 			}
 		}

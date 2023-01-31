@@ -13,6 +13,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 
 	"github.com/devfile/library/pkg/util"
+	. "github.com/onsi/ginkgo/v2"
 	"github.com/redhat-appstudio/application-service/pkg/devfile"
 	"github.com/redhat-appstudio/e2e-tests/pkg/constants"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
@@ -177,4 +178,36 @@ func ExecuteCommandInASpecificDirectory(command string, args []string, directory
 	}
 
 	return err
+}
+
+func WriteLogInFile(filePath string, log string) {
+	// Do not create empty files
+	if len(log) != 0 {
+		f, err := os.Create(filePath)
+		if err != nil {
+			klog.Error(err)
+		}
+		defer f.Close()
+
+		_, err2 := f.WriteString(log)
+
+		if err2 != nil {
+			klog.Error(err2)
+		}
+	}
+}
+
+func WritePipelineRunLogs(pipelineRunName, namespace, logs string) {
+	artifactDir := os.Getenv("ARTIFACT_DIR")
+
+	if artifactDir != "" {
+		logsDir := fmt.Sprintf("%s/pipelineRunLogs", artifactDir)
+
+		if err := os.MkdirAll(logsDir, 0755); err != nil {
+			GinkgoWriter.Printf("error creating dir: %s\n", logsDir)
+		}
+
+		logsFilePath := fmt.Sprintf("%s/[%s]%s", logsDir, namespace, pipelineRunName)
+		WriteLogInFile(logsFilePath, logs)
+	}
 }
