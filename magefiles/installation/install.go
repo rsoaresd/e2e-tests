@@ -138,6 +138,9 @@ func (i *InstallAppStudio) setInstallationEnvironments() {
 	os.Setenv("BUILD_SERVICE_IMAGE_TAG_EXPIRATION", i.DefaultImageTagExpiration)
 	os.Setenv("PAC_GITHUB_APP_ID", utils.GetEnv("E2E_PAC_GITHUB_APP_ID", ""))                   // #nosec G104
 	os.Setenv("PAC_GITHUB_APP_PRIVATE_KEY", utils.GetEnv("E2E_PAC_GITHUB_APP_PRIVATE_KEY", "")) // #nosec G104
+	// setting 'vault' as default TOKENSTORAGE since SPI pretends to change the default value
+	// more info: https://issues.redhat.com/browse/SVPI-683
+	os.Setenv("IS_VAULT_TOKEN_STORAGE_TYPE", "true")
 }
 
 func (i *InstallAppStudio) cloneInfraDeployments() (*git.Remote, error) {
