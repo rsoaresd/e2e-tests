@@ -276,6 +276,7 @@ func (h *HasController) DeleteAllComponentsInASpecificNamespace(namespace string
 		if err := h.KubeRest().List(context.Background(), componentList, &rclient.ListOptions{Namespace: namespace}); err != nil {
 			return false, nil
 		}
+		// temporary
 		GinkgoWriter.Printf("%s", componentList)
 		return len(componentList.Items) == 0, nil
 	}, timeout)
