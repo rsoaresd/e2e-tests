@@ -276,6 +276,7 @@ func (h *HasController) DeleteAllComponentsInASpecificNamespace(namespace string
 		if err := h.KubeRest().List(context.Background(), componentList, &rclient.ListOptions{Namespace: namespace}); err != nil {
 			return false, nil
 		}
+		GinkgoWriter.Printf("%s", componentList)
 		return len(componentList.Items) == 0, nil
 	}, timeout)
 }
@@ -299,7 +300,9 @@ func (h *HasController) ComponentReady(component *appservice.Component) wait.Con
 // Waits for a component until is deleted and if not will return an error
 func (h *HasController) ComponentDeleted(component *appservice.Component) wait.ConditionFunc {
 	return func() (bool, error) {
-		_, err := h.GetComponent(component.Name, component.Namespace)
+		cmp, err := h.GetComponent(component.Name, component.Namespace)
+		// temporary
+		GinkgoWriter.Printf("%s", cmp)
 		return err != nil && k8sErrors.IsNotFound(err), nil
 	}
 }
